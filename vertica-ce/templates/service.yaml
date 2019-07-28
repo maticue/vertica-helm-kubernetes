@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vertica-ce.fullname" . }}
+  labels:
+{{ include "vertica-ce.labels" . | indent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "vertica-ce.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
