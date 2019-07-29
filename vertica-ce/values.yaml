@@ -6,8 +6,9 @@ replicaCount: 1
 
 image:
   repository: docker.io/bryanherger/vertica-ce
-  tag: 9.2.1-3
-  pullPolicy: IfNotPresent
+  tag: 9.2.1-3-k8s
+  pullPolicy: Always
+#  pullPolicy: IfNotPresent
 
 imagePullSecrets: []
 nameOverride: ""
