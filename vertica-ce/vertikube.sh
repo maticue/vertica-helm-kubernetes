@@ -20,8 +20,11 @@ while [[ $ALL_IPS == *"none"* ]]; do
 done
 
 POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=vertica-ce,app.kubernetes.io/instance=vertikube" -o jsonpath="{.items[0].metadata.name}")
-kubectl exec $POD_NAME -i -t -- /opt/vertica/sbin/install_vertica --debug --license CE --accept-eula --hosts $ALL_IPS --dba-user-password-disabled --failure-threshold NONE --no-system-configuration
+kubectl exec $POD_NAME -i -t -- /opt/vertica/sbin/install_vertica --debug --license CE --accept-eula --hosts $ALL_IPS --dba-user-password-disabled --failure-threshold NONE --no-system-configuration --point-to-point
 # consider setting a password here depending on your use case!
 kubectl exec $POD_NAME -i -t -- su - dbadmin -c "/opt/vertica/bin/admintools -t create_db --skip-fs-checks --hosts $ALL_IPS -d vertikube -c /tmp/catalog -D /tmp/data"
-kubectl exec $POD_NAME -i -t -- /opt/vertica/bin/vsql -U dbadmin
+# adjust general pool size to fit in your container request and limit
+kubectl exec $POD_NAME -i -t -- /opt/vertica/bin/vsql -U dbadmin -c "ALTER RESOURCE POOL general MAXMEMORYSIZE '3000M';"
+kubectl exec $POD_NAME -i -t -- su - dbadmin -c "/opt/vertica/bin/admintools -t stop_db -d vertikube -i"
+kubectl exec $POD_NAME -i -t -- su - dbadmin -c "/opt/vertica/bin/admintools -t start_db -d vertikube -i"
 
