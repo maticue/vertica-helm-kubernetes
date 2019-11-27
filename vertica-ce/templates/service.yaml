@@ -11,6 +11,7 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+  clusterIP: None
   selector:
     app.kubernetes.io/name: {{ include "vertica-ce.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

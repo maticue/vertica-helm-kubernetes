@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "vertica-ce.fullname" . }}
   labels:
 {{ include "vertica-ce.labels" . | indent 4 }}
 spec:
+  #serviceName: !!!
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -28,6 +29,11 @@ spec:
             - name: http
               containerPort: 5433
               protocol: TCP
+          volumeMounts:
+            - name: {{ .Values.volumes.catalog.name }}
+              mountPath: {{ .Values.volumes.catalog.mountPath }}
+            - name: {{ .Values.volumes.data.name }}
+              mountPath: {{ .Values.volumes.data.mountPath }}
 #          livenessProbe:
 #            httpGet:
 #              path: /
@@ -42,11 +48,32 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-    {{- with .Values.affinity }}
+      {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+      {{- end }}
+      {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- end }}
+  volumeClaimTemplates:
+  {{- with .Values.volumes.catalog }}
+  - metadata:
+      name: {{ .name }}
+    spec:
+      storageClassName: {{ .storageClassName }}
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .size }}
+  {{- end }}
+  {{- with .Values.volumes.data }}
+  - metadata:
+      name: {{ .name }}
+    spec:
+      storageClassName: {{ .storageClassName }}
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .size }}
+  {{- end }}
